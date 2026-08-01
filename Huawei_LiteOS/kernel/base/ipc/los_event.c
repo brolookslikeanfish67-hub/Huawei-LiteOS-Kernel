@@ -32,20 +32,15 @@
  * applicable export control laws and regulations.
  *---------------------------------------------------------------------------*/
 
-#include "los_event.inc"
-
-#include "los_priqueue.ph"
-#include "los_task.ph"
-
+#include "los_event.h"
+#include "los_priqueue.h"
+#include "los_task.h"
 #include "los_hw.h"
 #include "los_hwi.h"
 
 #ifdef __cplusplus
-#if __cplusplus
-extern "C"{
-#endif
+extern "C" {
 #endif /* __cplusplus */
-
 
 LITE_OS_SEC_TEXT_INIT UINT32 LOS_EventInit(PEVENT_CB_S pstEventCB)
 {
@@ -60,32 +55,32 @@ LITE_OS_SEC_TEXT_INIT UINT32 LOS_EventInit(PEVENT_CB_S pstEventCB)
 
 LITE_OS_SEC_TEXT UINT32 LOS_EventPoll(UINT32 *uwEventID, UINT32 uwEventMask, UINT32 uwMode)
 {
-     UINT32     uwRet = 0;
-     UINTPTR    uvIntSave;
+    UINT32  uwRet = 0;
+    UINTPTR uvIntSave;
 
-     uvIntSave = LOS_IntLock();
-     if (uwMode & LOS_WAITMODE_OR)
-     {
-         if (0 != (*uwEventID & uwEventMask))
-         {
+    uvIntSave = LOS_IntLock();
+    if (uwMode & LOS_WAITMODE_OR)
+    {
+        if (0 != (*uwEventID & uwEventMask))
+        {
             uwRet = *uwEventID & uwEventMask;
-         }
-     }
-     else
-     {
-         if ((uwEventMask != 0) && (uwEventMask == (*uwEventID & uwEventMask)))
-         {
+        }
+    }
+    else
+    {
+        if ((uwEventMask != 0) && (uwEventMask == (*uwEventID & uwEventMask)))
+        {
             uwRet = *uwEventID & uwEventMask;
-         }
-     }
+        }
+    }
 
-     if (uwRet && (LOS_WAITMODE_CLR & uwMode))
-     {
+    if (uwRet && (LOS_WAITMODE_CLR & uwMode))
+    {
         *uwEventID = *uwEventID & ~(uwRet);
-     }
+    }
 
-     LOS_IntRestore(uvIntSave);
-     return uwRet;
+    LOS_IntRestore(uvIntSave);
+    return uwRet;
 }
 
 LITE_OS_SEC_TEXT UINT32 LOS_EventRead(PEVENT_CB_S pstEventCB, UINT32 uwEventMask, UINT32 uwMode, UINT32 uwTimeOut)
@@ -111,7 +106,7 @@ LITE_OS_SEC_TEXT UINT32 LOS_EventRead(PEVENT_CB_S pstEventCB, UINT32 uwEventMask
     }
 
     if (((uwMode & LOS_WAITMODE_OR) && (uwMode & LOS_WAITMODE_AND)) ||
-        uwMode & ~(LOS_WAITMODE_OR | LOS_WAITMODE_AND | LOS_WAITMODE_CLR) ||
+        (uwMode & ~(LOS_WAITMODE_OR | LOS_WAITMODE_AND | LOS_WAITMODE_CLR)) ||
         !(uwMode & (LOS_WAITMODE_OR | LOS_WAITMODE_AND)))
     {
         return LOS_ERRNO_EVENT_FLAGS_INVALID;
@@ -127,7 +122,8 @@ LITE_OS_SEC_TEXT UINT32 LOS_EventRead(PEVENT_CB_S pstEventCB, UINT32 uwEventMask
 
     if (uwRet == 0)
     {
-        if (uwTimeOut == 0){
+        if (uwTimeOut == 0)
+        {
             (VOID)LOS_IntRestore(uvIntSave);
             return uwRet;
         }
@@ -145,7 +141,8 @@ LITE_OS_SEC_TEXT UINT32 LOS_EventRead(PEVENT_CB_S pstEventCB, UINT32 uwEventMask
         pstRunTsk->usTaskStatus |= OS_TASK_STATUS_PEND;
         pstRunTsk->uwEventMask = uwEventMask;
         pstRunTsk->uwEventMode = uwMode;
-        LOS_ListTailInsert(&pstEventCB->stEventList,pstPendObj);
+        LOS_ListTailInsert(&pstEventCB->stEventList, pstPendObj);
+        
         if ((uwTimeOut != 0) && (uwTimeOut != LOS_WAIT_FOREVER))
         {
             pstRunTsk->usTaskStatus |= OS_TASK_STATUS_TIMEOUT;
@@ -159,6 +156,7 @@ LITE_OS_SEC_TEXT UINT32 LOS_EventRead(PEVENT_CB_S pstEventCB, UINT32 uwEventMask
             (VOID)LOS_IntRestore(uvIntSave);
             LOS_Schedule();
         }
+        
         if (pstRunTsk->usTaskStatus & OS_TASK_STATUS_TIMEOUT)
         {
             uvIntSave = LOS_IntLock();
@@ -168,7 +166,7 @@ LITE_OS_SEC_TEXT UINT32 LOS_EventRead(PEVENT_CB_S pstEventCB, UINT32 uwEventMask
         }
 
         uvIntSave = LOS_IntLock();
-        uwRet = LOS_EventPoll(&pstEventCB->uwEventID,uwEventMask,uwMode);
+        uwRet = LOS_EventPoll(&pstEventCB->uwEventID, uwEventMask, uwMode);
         (VOID)LOS_IntRestore(uvIntSave);
     }
     else
@@ -198,17 +196,16 @@ LITE_OS_SEC_TEXT UINT32 LOS_EventWrite(PEVENT_CB_S pstEventCB, UINT32 uwEvents)
 
     uvIntSave = LOS_IntLock();
 
-
     pstEventCB->uwEventID |= uwEvents;
     if (!LOS_ListEmpty(&pstEventCB->stEventList))
     {
-        for (pstResumedTask = LOS_DL_LIST_ENTRY((&pstEventCB->stEventList)->pstNext, LOS_TASK_CB, stPendList);/*lint !e413*/
-            &pstResumedTask->stPendList != (&pstEventCB->stEventList);)
+        for (pstResumedTask = LOS_DL_LIST_ENTRY((&pstEventCB->stEventList)->pstNext, LOS_TASK_CB, stPendList);
+             &pstResumedTask->stPendList != (&pstEventCB->stEventList);)
         {
-            pstNextTask = LOS_DL_LIST_ENTRY(pstResumedTask->stPendList.pstNext, LOS_TASK_CB, stPendList); /*lint !e413*/
+            pstNextTask = LOS_DL_LIST_ENTRY(pstResumedTask->stPendList.pstNext, LOS_TASK_CB, stPendList);
 
-            if (((pstResumedTask->uwEventMode & LOS_WAITMODE_OR) && (pstResumedTask->uwEventMask & uwEvents) != 0) ||
-                ((pstResumedTask->uwEventMode & LOS_WAITMODE_AND) && (pstResumedTask->uwEventMask & pstEventCB->uwEventID) == pstResumedTask->uwEventMask))
+            if (((pstResumedTask->uwEventMode & LOS_WAITMODE_OR) && ((pstResumedTask->uwEventMask & uwEvents) != 0)) ||
+                ((pstResumedTask->uwEventMode & LOS_WAITMODE_AND) && ((pstResumedTask->uwEventMask & pstEventCB->uwEventID) == pstResumedTask->uwEventMask)))
             {
                 ucExitFlag = 1;
                 LOS_ListDelete(&(pstResumedTask->stPendList));
@@ -256,6 +253,7 @@ LITE_OS_SEC_TEXT_INIT UINT32 LOS_EventDestory(PEVENT_CB_S pstEventCB)
     pstEventCB->stEventList.pstPrev = (LOS_DL_LIST *)NULL;
     return LOS_OK;
 }
+
 LITE_OS_SEC_TEXT_MINOR UINT32 LOS_EventClear(PEVENT_CB_S pstEventCB, UINT32 uwEvents)
 {
     UINTPTR uvIntSave;
@@ -271,9 +269,6 @@ LITE_OS_SEC_TEXT_MINOR UINT32 LOS_EventClear(PEVENT_CB_S pstEventCB, UINT32 uwEv
     return LOS_OK;
 }
 
-
 #ifdef __cplusplus
-#if __cplusplus
 }
-#endif
 #endif /* __cplusplus */
