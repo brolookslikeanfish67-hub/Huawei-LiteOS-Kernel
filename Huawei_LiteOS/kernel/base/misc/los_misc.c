@@ -32,14 +32,17 @@
  * applicable export control laws and regulations.
  *---------------------------------------------------------------------------*/
 
-#include "los_base.ph"
-#include "los_sys.ph"
-#include "los_task.ph"
-
+#include "los_base.h"
+#include "los_sys.h"
+#include "los_task.h"
 #include "los_hwi.h"
 
+/**
+ * @brief Aligns an address upward to a boundary.
+ */
 LITE_OS_SEC_TEXT UINT32 LOS_Align(UINT32 uwAddr, UINT32 uwBoundary)
 {
+    /* Check for integer overflow before calculating alignment */
     if (uwAddr + uwBoundary - 1 > uwAddr) {
         return (uwAddr + uwBoundary - 1) & ~(uwBoundary - 1);
     } else {
@@ -47,10 +50,14 @@ LITE_OS_SEC_TEXT UINT32 LOS_Align(UINT32 uwAddr, UINT32 uwBoundary)
     }
 }
 
+/**
+ * @brief Task millisecond sleep function.
+ */
 LITE_OS_SEC_TEXT_MINOR VOID LOS_Msleep(UINT32 uwMsecs)
 {
     UINT32 uwInterval = 0;
 
+    /* Millisecond sleep cannot be executed inside an active interrupt handler (ISR) */
     if (OS_INT_ACTIVE) {
         return;
     }
@@ -60,7 +67,7 @@ LITE_OS_SEC_TEXT_MINOR VOID LOS_Msleep(UINT32 uwMsecs)
     } else {
         uwInterval = LOS_MS2Tick(uwMsecs);
         if (uwInterval == 0) {
-             uwInterval = 1;
+            uwInterval = 1;
         }
     }
 
