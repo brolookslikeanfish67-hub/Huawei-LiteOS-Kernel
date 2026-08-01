@@ -20,5 +20,3 @@
 
 
 "D:\EWARM_IAR\common\bin\cspybat" "D:\EWARM_IAR\arm\bin\armproc.dll" "D:\EWARM_IAR\arm\bin\armjlink.dll"  %1 --plugin "D:\EWARM_IAR\arm\bin\armbat.dll" --device_macro "D:\EWARM_IAR\arm\config\debugger\ST\STM32F4xx.dmac" --flash_loader "D:\EWARM_IAR\arm\config\flashloader\ST\FlashSTM32F411xE.board" --backend -B "--endian=little" "--cpu=Cortex-M4F" "--fpu=VFPv4" "-p" "D:\EWARM_IAR\arm\CONFIG\debugger\ST\STM32F411CE.ddf" "--semihosting" "--device=STM32F411CE" "--drv_communication=USB0" "--jlink_speed=auto" "--jlink_initial_speed=1000" "--jlink_reset_strategy=0,0" "--jlink_interface=SWD" "--drv_catch_exceptions=0x000" "--drv_swo_clock_setup=72000000,0,2000000" 
-
-
