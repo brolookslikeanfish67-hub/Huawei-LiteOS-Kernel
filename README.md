@@ -1,1 +1,1 @@
-##Huawei LiteOS Kernel项目地址迁移至：https://github.com/LITEOS/LiteOS_Kernel.git
+##Huawei LiteOS Kernel：https://github.com/brolookslikeanfish67-hub/Huawei-LiteOS-Kernel.git
